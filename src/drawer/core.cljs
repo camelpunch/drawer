@@ -1,12 +1,14 @@
 (ns ^:figwheel-always drawer.core
-    (:require))
+    (:require [monet.canvas :as canvas]))
 
-(enable-console-print!)
+(def canvas-dom (.getElementById js/document "canvas"))
 
-(println "Edits to this text should show up in your developer console.")
+(def monet-canvas (canvas/init canvas-dom "2d"))
 
-;; define your app data so that it doesn't get over-written on reload
-
-(defonce app-state (atom {:text "Hello world!"}))
-
-
+(canvas/add-entity monet-canvas :background
+                   (canvas/entity {:x 0 :y 0 :w 600 :h 600} ; val
+                                  nil                       ; update function
+                                  (fn [ctx val]             ; draw function
+                                    (-> ctx
+                                        (canvas/fill-style "#191d21")
+                                        (canvas/fill-rect val)))))
