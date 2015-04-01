@@ -1,5 +1,6 @@
 (ns ^:figwheel-always drawer.core
-    (:require [monet.canvas :as canvas]))
+    (:require [monet.canvas :as canvas]
+              [reagent.core :as r]))
 
 (enable-console-print!)
 
@@ -43,3 +44,10 @@
                   (-> ctx
                       (canvas/fill-style "#ff00ff")
                       (canvas/fill-rect val)))))
+
+(defn page []
+  [:div "Hello, World!"])
+
+(defn ^:export run []
+  (r/render [page]
+            (js/document.getElementById "app")))
