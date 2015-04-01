@@ -21,19 +21,13 @@
 (defn top-edge [obj]
   ((geo/top-left obj) :y))
 
-(defn over-right-limit? [container obj]
-  (> (right-edge obj) (right-edge container)))
-(defn over-left-limit? [container obj]
-  (< (left-edge obj) (left-edge container)))
-(defn over-bottom-limit? [container obj]
-  (> (bottom-edge obj) (bottom-edge container)))
-(defn over-top-limit? [container obj]
-  (< (top-edge obj) (top-edge container)))
+(defn beyond? [comparison-fn edge-fn container obj]
+  (comparison-fn (edge-fn obj) (edge-fn container)))
 
 (defn bounce-x-within [bg {:keys [x-dir] :as entity}]
-  (let [new-x-dir (if (or (over-right-limit? bg entity)
+  (let [new-x-dir (if (or (beyond? > right-edge bg entity)
                           (and (= left x-dir)
-                               (not (over-left-limit? bg entity))))
+                               (beyond? > left-edge bg entity)))
                     left
                     right)]
     (-> entity
@@ -41,9 +35,9 @@
         (update-in [:x] new-x-dir))))
 
 (defn bounce-y-within [bg {:keys [y-dir] :as entity}]
-  (let [new-y-dir (if (or (over-bottom-limit? bg entity)
+  (let [new-y-dir (if (or (beyond? > bottom-edge bg entity)
                           (and (= up y-dir)
-                               (not (over-top-limit? bg entity))))
+                               (beyond? > top-edge bg entity)))
                     up
                     down)]
     (-> entity
