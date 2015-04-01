@@ -7,21 +7,6 @@
 
 (def state (r/atom {:speed 4}))
 
-(def canvas-dom
-  (.getElementById js/document "canvas"))
-
-(defonce monet-canvas
-  (canvas/init canvas-dom "2d"))
-
-(canvas/add-entity monet-canvas
-                   :background
-                   (canvas/entity {:x 0 :y 0 :w 600 :h 480}
-                                  nil
-                                  (fn [ctx val]
-                                    (-> ctx
-                                        (canvas/fill-style "#191d21")
-                                        (canvas/fill-rect val)))))
-
 (def up #(- % (@state :speed)))
 (def down #(+ % (@state :speed)))
 (def left up)
@@ -65,30 +50,48 @@
         (assoc :y-dir new-y-dir)
         (update-in [:y] new-y-dir))))
 
-(defonce foo
-  (canvas/add-entity
-   monet-canvas :foo
-   (canvas/entity {:x 10 :y 10 :w 100 :h 100 :y-direction down}
-                  (fn [entity]
-                    (let [bg (canvas/get-entity monet-canvas :background)]
-                      (->> entity
-                           (bounce-x-within bg)
-                           (bounce-y-within bg))))
-                  (fn [ctx val]
-                    (-> ctx
-                        (canvas/fill-style "#ff00ff")
-                        (canvas/fill-rect val))))))
-
 (defn page []
   [:div
    [:p
     [:label {:for "speed"} "Speed:"]
-    [:input.inpt-num {:type "number"
-                      :min 0
-                      :value (@state :speed)
-                      :on-change (fn [e]
-                                   (let [new-speed (-> e .-target .-valueAsNumber)]
-                                     (swap! state assoc :speed new-speed)))}]]])
+    [:input.inpt-num
+     {:type "number"
+      :min 0
+      :value (@state :speed)
+      :on-change (fn [e]
+                   (let [new-speed (-> e
+                                       .-target
+                                       .-valueAsNumber)]
+                     (swap! state assoc :speed new-speed)))}]]])
 
 (r/render-component [page]
                     (js/document.getElementById "app"))
+
+(def canvas-dom
+  (.getElementById js/document "canvas"))
+
+(defonce monet-canvas
+  (canvas/init canvas-dom "2d"))
+
+(canvas/add-entity monet-canvas
+                   :background
+                   (canvas/entity {:x 0 :y 0 :w 600 :h 480}
+                                  nil
+                                  (fn [ctx val]
+                                    (-> ctx
+                                        (canvas/fill-style "#191d21")
+                                        (canvas/fill-rect val)))))
+
+
+(canvas/add-entity
+ monet-canvas :foo
+ (canvas/entity {:x 10 :y 10 :w 100 :h 100 :y-direction down}
+                (fn [entity]
+                  (let [bg (canvas/get-entity monet-canvas :background)]
+                    (->> entity
+                         (bounce-x-within bg)
+                         (bounce-y-within bg))))
+                (fn [ctx val]
+                  (-> ctx
+                      (canvas/fill-style "#ff00ff")
+                      (canvas/fill-rect val)))))
