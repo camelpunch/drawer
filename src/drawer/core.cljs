@@ -15,27 +15,36 @@
 
 (canvas/add-entity monet-canvas
                    :background
-                   (canvas/entity {:x 0 :y 0 :w 200 :h 600}
+                   (canvas/entity {:x 0 :y 0 :w 600 :h 480}
                                   nil
                                   (fn [ctx val]
                                     (-> ctx
                                         (canvas/fill-style "#191d21")
                                         (canvas/fill-rect val)))))
 
-(def up dec)
-(def down inc)
-(def left dec)
-(def right inc)
+(def speed 2)
+(def up #(- % speed))
+(def down #(+ % speed))
+(def left up)
+(def right down)
 
 (defn right-edge [obj]
   ((geo/bottom-right obj) :x))
 (defn left-edge [entity]
   ((geo/top-left entity) :x))
+(defn bottom-edge [obj]
+  ((geo/bottom-right obj) :y))
+(defn top-edge [obj]
+  ((geo/top-left obj) :y))
 
 (defn over-right-limit? [container obj]
   (> (right-edge obj) (right-edge container)))
 (defn over-left-limit? [container obj]
   (< (left-edge obj) (left-edge container)))
+(defn over-bottom-limit? [container obj]
+  (> (bottom-edge obj) (bottom-edge container)))
+(defn over-top-limit? [container obj]
+  (< (top-edge obj) (top-edge container)))
 
 (defn bounce-x-within [bg {:keys [x-dir] :as entity}]
   (let [new-x-dir (if (or (over-right-limit? bg entity)
@@ -47,13 +56,24 @@
         (assoc :x-dir new-x-dir)
         (update-in [:x] new-x-dir))))
 
+(defn bounce-y-within [bg {:keys [y-dir] :as entity}]
+  (let [new-y-dir (if (or (over-bottom-limit? bg entity)
+                          (and (= up y-dir)
+                               (not (over-top-limit? bg entity))))
+                    up
+                    down)]
+    (-> entity
+        (assoc :y-dir new-y-dir)
+        (update-in [:y] new-y-dir))))
+
 (canvas/add-entity
  monet-canvas :foo
  (canvas/entity {:x 10 :y 10 :w 100 :h 100 :y-direction down}
                 (fn [entity]
                   (let [bg (canvas/get-entity monet-canvas :background)]
                     (->> entity
-                         (bounce-x-within bg))))
+                         (bounce-x-within bg)
+                         (bounce-y-within bg))))
                 (fn [ctx val]
                   (-> ctx
                       (canvas/fill-style "#ff00ff")
