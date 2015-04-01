@@ -1,2 +1,4 @@
-/* some style */
-
+.inpt-num {
+    width: 4em;
+    text-align: right
+}

@@ -81,13 +81,14 @@
 
 (defn page []
   [:div
-   [:label {:for "speed"} "Speed:"]
-   [:input {:type "number"
-            :min 0
-            :value (@state :speed)
-            :on-change (fn [e]
-                         (let [new-speed (-> e .-target .-valueAsNumber)]
-                           (swap! state assoc :speed new-speed)))}]])
+   [:p
+    [:label {:for "speed"} "Speed:"]
+    [:input.inpt-num {:type "number"
+                      :min 0
+                      :value (@state :speed)
+                      :on-change (fn [e]
+                                   (let [new-speed (-> e .-target .-valueAsNumber)]
+                                     (swap! state assoc :speed new-speed)))}]]])
 
 (r/render-component [page]
                     (js/document.getElementById "app"))
