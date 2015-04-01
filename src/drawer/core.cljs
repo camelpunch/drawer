@@ -5,7 +5,7 @@
 
 (enable-console-print!)
 
-(def state (r/atom {:contained? true}))
+(def state (r/atom {:speed 4}))
 
 (def canvas-dom
   (.getElementById js/document "canvas"))
@@ -22,9 +22,8 @@
                                         (canvas/fill-style "#191d21")
                                         (canvas/fill-rect val)))))
 
-(def speed 2)
-(def up #(- % speed))
-(def down #(+ % speed))
+(def up #(- % (@state :speed)))
+(def down #(+ % (@state :speed)))
 (def left up)
 (def right down)
 
@@ -66,23 +65,29 @@
         (assoc :y-dir new-y-dir)
         (update-in [:y] new-y-dir))))
 
-(canvas/add-entity
- monet-canvas :foo
- (canvas/entity {:x 10 :y 10 :w 100 :h 100 :y-direction down}
-                (fn [entity]
-                  (let [bg (canvas/get-entity monet-canvas :background)]
-                    (->> entity
-                         (bounce-x-within bg)
-                         (bounce-y-within bg))))
-                (fn [ctx val]
-                  (-> ctx
-                      (canvas/fill-style "#ff00ff")
-                      (canvas/fill-rect val)))))
+(defonce foo
+  (canvas/add-entity
+   monet-canvas :foo
+   (canvas/entity {:x 10 :y 10 :w 100 :h 100 :y-direction down}
+                  (fn [entity]
+                    (let [bg (canvas/get-entity monet-canvas :background)]
+                      (->> entity
+                           (bounce-x-within bg)
+                           (bounce-y-within bg))))
+                  (fn [ctx val]
+                    (-> ctx
+                        (canvas/fill-style "#ff00ff")
+                        (canvas/fill-rect val))))))
 
 (defn page []
   [:div
-])
+   [:label {:for "speed"} "Speed:"]
+   [:input {:type "number"
+            :min 0
+            :value (@state :speed)
+            :on-change (fn [e]
+                         (let [new-speed (-> e .-target .-valueAsNumber)]
+                           (swap! state assoc :speed new-speed)))}]])
 
-(defn ^:export run []
-  (r/render [page]
-            (js/document.getElementById "app")))
+(r/render-component [page]
+                    (js/document.getElementById "app"))
