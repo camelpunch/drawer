@@ -24,20 +24,20 @@
 (defn beyond? [comparison-fn edge-fn container obj]
   (comparison-fn (edge-fn obj) (edge-fn container)))
 
-(defn bounce-x-within [container {:keys [x-dir] :as entity}]
-  (let [new-x-dir (if (or (beyond? > right-edge container entity)
+(defn bounce-x [{:keys [x-dir] :as entity} container]
+  (let [new-x-dir (if (or (beyond? >= right-edge container entity)
                           (and (= left x-dir)
-                               (beyond? > left-edge container entity)))
+                               (beyond? >= left-edge container entity)))
                     left
                     right)]
     (-> entity
         (assoc :x-dir new-x-dir)
         (update-in [:x] new-x-dir))))
 
-(defn bounce-y-within [container {:keys [y-dir] :as entity}]
-  (let [new-y-dir (if (or (beyond? > bottom-edge container entity)
+(defn bounce-y [{:keys [y-dir] :as entity} container]
+  (let [new-y-dir (if (or (beyond? >= bottom-edge container entity)
                           (and (= up y-dir)
-                               (beyond? > top-edge container entity)))
+                               (beyond? >= top-edge container entity)))
                     up
                     down)]
     (-> entity
@@ -68,9 +68,9 @@
 (defonce monet-canvas
   (canvas/init canvas-dom "2d"))
 
-(def initial-bg {:x 0 :y 0 :w 600 :h 480})
-(defn current-bg []
-  (canvas/get-entity monet-canvas :background))
+(def initial-bg {:x 0 :y 0 :w 640 :h 480})
+(defn current [k]
+  (canvas/get-entity monet-canvas k))
 
 (canvas/add-entity monet-canvas
                    :background
@@ -78,29 +78,31 @@
                                   nil
                                   (fn [ctx val]
                                     (-> ctx
-                                        (canvas/fill-style "#191d21")
+                                        (canvas/fill-style "#ffffff")
                                         (canvas/fill-rect val)))))
 
-(canvas/add-entity
- monet-canvas :square1
- (canvas/entity {:x 10 :y 10 :w 100 :h 100}
-                (fn [entity]
-                  (let [bg (current-bg)
-                        big-box (canvas/get-entity monet-canvas
-                                                   :square2)]
-                    (->> entity
-                         (bounce-x-within bg)
-                         (bounce-y-within bg)
-                         (bounce-x-within big-box)
-                         (bounce-y-within big-box))))
-                (fn [ctx val]
-                  (-> ctx
-                      (canvas/fill-style "rgba(255, 255, 255, 0.5)")
-                      (canvas/fill-rect val)))))
+(defn add-ball [k x y update]
+  (canvas/add-entity
+   monet-canvas k
+   (canvas/entity {:x x :y y :w 220 :h 220}
+                  update
+                  (fn [ctx val]
+                    (-> ctx
+                        (canvas/draw-image (js/document.getElementById "image") (val :x) (val :y)))))))
+
+(add-ball :ball1 1000 0
+          (fn [entity]
+            (let [bg (current :background)
+                  box (current :box)]
+              (-> entity
+                  (bounce-x bg)
+                  (bounce-y bg)
+                  (bounce-x box)
+                  (bounce-y box)))))
 
 (canvas/add-entity
- monet-canvas :square2
- (let [w 200 h 300]
+ monet-canvas :box
+ (let [w 300 h 400]
    (canvas/entity {:x (- (initial-bg :w) w 10)
                    :y (- (initial-bg :h) h 10)
                    :w w
@@ -108,11 +110,19 @@
                    :y-dir up
                    :x-dir left}
                   (fn [entity]
-                    (let [bg (current-bg)]
-                      (->> entity
-                           (bounce-x-within bg)
-                           (bounce-y-within bg))))
+                    (let [bg (current :background)]
+                      (-> entity
+                          (bounce-x bg)
+                          (bounce-y bg))))
                   (fn [ctx val]
                     (-> ctx
-                        (canvas/fill-style "rgba(255, 0, 0, 0.2)")
+                        (canvas/fill-style "rgba(0, 0, 0, 0.5)")
                         (canvas/fill-rect val))))))
+
+(add-ball :ball2 10 10
+          (fn [entity]
+            (let [bg (current :background)
+                  box (current :box)]
+              (-> entity
+                  (bounce-x bg)
+                  (bounce-y bg)))))

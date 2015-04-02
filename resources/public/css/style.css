@@ -1,4 +1,14 @@
+body {
+    font-family: "Helvetica Neue";
+    font-weight: 200;
+}
 .inpt-num {
     width: 4em;
     text-align: right
+}
+canvas {
+    border: 1px solid #ccc
+}
+img {
+    display: none
 }
