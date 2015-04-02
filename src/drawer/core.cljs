@@ -56,7 +56,8 @@
                    (let [new-speed (-> e
                                        .-target
                                        .-valueAsNumber)]
-                     (swap! state assoc :speed new-speed)))}]]])
+                     (when-not (js/isNaN new-speed)
+                       (swap! state assoc :speed new-speed))))}]]])
 
 (r/render-component [page]
                     (js/document.getElementById "app"))
