@@ -13,18 +13,6 @@
   (r/atom {:tool nil
            :coords []}))
 
-(defn right-edge [obj]
-  ((geo/bottom-right obj) :x))
-(defn left-edge [entity]
-  ((geo/top-left entity) :x))
-(defn bottom-edge [obj]
-  ((geo/bottom-right obj) :y))
-(defn top-edge [obj]
-  ((geo/top-left obj) :y))
-
-(defn beyond? [comparison-fn edge-fn container obj]
-  (comparison-fn (edge-fn obj) (edge-fn container)))
-
 (defn class-for [state tool]
   (when (= tool (state :tool))
     "active"))
@@ -83,5 +71,35 @@
 (let [c (listen canvas-dom events/EventType.MOUSEMOVE)]
   (go-loop []
     (let [e (<! c)]
-      (swap! state assoc :coords [(.-offsetX e) (.-offsetY e)]))
-    (recur)))
+      (swap! state assoc :coords {:x (.-offsetX e)
+                                  :y (.-offsetY e)})
+      (recur))))
+
+(defn removed? [key old-state new-state]
+  (and (old-state key)
+       (nil? (new-state key))))
+
+(defn added? [key old-state new-state]
+  (and (not (nil? (new-state :tool)))
+       (not= (old-state :tool) (new-state :tool))))
+
+(add-watch
+ state :display-shape
+ (fn [key atom old-state new-state]
+   (cond
+
+     (removed? :tool old-state new-state)
+     (canvas/remove-entity monet-canvas (old-state :tool))
+
+     (added? :tool old-state new-state)
+     (let [tool (new-state :tool)]
+       (canvas/remove-entity monet-canvas (old-state :tool))
+       (canvas/add-entity
+        monet-canvas
+        tool
+        (canvas/entity {:x 0 :y 0 :w 100 :h 100}
+                       #(merge % (@state :coords))
+                       (fn [ctx val]
+                         (-> ctx
+                             (canvas/fill-style "#000000")
+                             (canvas/fill-rect val)))))))))
