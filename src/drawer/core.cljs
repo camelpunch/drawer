@@ -1,16 +1,17 @@
 (ns ^:figwheel-always drawer.core
     (:require [monet.canvas :as canvas]
               [monet.geometry :as geo]
-              [reagent.core :as r]))
+              [reagent.core :as r]
+              [goog.dom :as dom]
+              [goog.events :as events]
+              [cljs.core.async :refer [chan put!]])
+    (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (enable-console-print!)
 
-(def state (r/atom {:speed 4}))
-
-(def up #(- % (@state :speed)))
-(def down #(+ % (@state :speed)))
-(def left up)
-(def right down)
+(def state
+  (r/atom {:tool nil
+           :coords []}))
 
 (defn right-edge [obj]
   ((geo/bottom-right obj) :x))
@@ -24,46 +25,39 @@
 (defn beyond? [comparison-fn edge-fn container obj]
   (comparison-fn (edge-fn obj) (edge-fn container)))
 
-(defn bounce-x [{:keys [x-dir] :as entity} container]
-  (let [new-x-dir (if (or (beyond? >= right-edge container entity)
-                          (and (= left x-dir)
-                               (beyond? >= left-edge container entity)))
-                    left
-                    right)]
-    (-> entity
-        (assoc :x-dir new-x-dir)
-        (update-in [:x] new-x-dir))))
+(defn class-for [state tool]
+  (when (= tool (state :tool))
+    "active"))
 
-(defn bounce-y [{:keys [y-dir] :as entity} container]
-  (let [new-y-dir (if (or (beyond? >= bottom-edge container entity)
-                          (and (= up y-dir)
-                               (beyond? >= top-edge container entity)))
-                    up
-                    down)]
-    (-> entity
-        (assoc :y-dir new-y-dir)
-        (update-in [:y] new-y-dir))))
+(defn activate-tool [state tool]
+  (assoc state :tool
+         (when (not= tool (state :tool))
+           tool)))
+
+(defn by-id [id]
+  (.getElementById js/document id))
 
 (defn page []
   [:div
-   [:p
-    [:label {:for "speed"} "Speed:"]
-    [:input.inpt-num
-     {:type "number"
-      :min 0
-      :value (@state :speed)
-      :on-change (fn [e]
-                   (let [new-speed (-> e
-                                       .-target
-                                       .-valueAsNumber)]
-                     (when-not (js/isNaN new-speed)
-                       (swap! state assoc :speed new-speed))))}]]])
+   [:p "Coords:" (str (@state :coords))]
+   [:p.tool
+    [:button.btn
+     {:id "square"
+      :class (class-for @state :square)
+      :on-click (fn [e] (swap! state
+                              activate-tool :square))}
+     "Square"]]
+   [:p.tool
+    [:button.btn
+     {:id "circle"
+      :class (class-for @state :circle)
+      :on-click (fn [e] (swap! state
+                              activate-tool :circle))}
+     "Circle"]]])
 
-(r/render-component [page]
-                    (js/document.getElementById "app"))
+(r/render-component [page] (by-id "app"))
 
-(def canvas-dom
-  (.getElementById js/document "canvas"))
+(def canvas-dom (by-id "canvas"))
 
 (defonce monet-canvas
   (canvas/init canvas-dom "2d"))
@@ -81,48 +75,13 @@
                                         (canvas/fill-style "#ffffff")
                                         (canvas/fill-rect val)))))
 
-(defn add-ball [k x y update]
-  (canvas/add-entity
-   monet-canvas k
-   (canvas/entity {:x x :y y :w 220 :h 220}
-                  update
-                  (fn [ctx val]
-                    (-> ctx
-                        (canvas/draw-image (js/document.getElementById "image") (val :x) (val :y)))))))
+(defn listen [el type]
+  (let [c (chan)]
+    (events/listen el type (fn [e] (put! c e)))
+    c))
 
-(add-ball :ball1 1000 0
-          (fn [entity]
-            (let [bg (current :background)
-                  box (current :box)]
-              (-> entity
-                  (bounce-x bg)
-                  (bounce-y bg)
-                  (bounce-x box)
-                  (bounce-y box)))))
-
-(canvas/add-entity
- monet-canvas :box
- (let [w 300 h 400]
-   (canvas/entity {:x (- (initial-bg :w) w 10)
-                   :y (- (initial-bg :h) h 10)
-                   :w w
-                   :h h
-                   :y-dir up
-                   :x-dir left}
-                  (fn [entity]
-                    (let [bg (current :background)]
-                      (-> entity
-                          (bounce-x bg)
-                          (bounce-y bg))))
-                  (fn [ctx val]
-                    (-> ctx
-                        (canvas/fill-style "rgba(0, 0, 0, 0.5)")
-                        (canvas/fill-rect val))))))
-
-(add-ball :ball2 10 10
-          (fn [entity]
-            (let [bg (current :background)
-                  box (current :box)]
-              (-> entity
-                  (bounce-x bg)
-                  (bounce-y bg)))))
+(let [c (listen canvas-dom events/EventType.MOUSEMOVE)]
+  (go-loop []
+    (let [e (<! c)]
+      (swap! state assoc :coords [(.-offsetX e) (.-offsetY e)]))
+    (recur)))

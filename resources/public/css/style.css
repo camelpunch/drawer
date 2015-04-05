@@ -2,9 +2,30 @@ body {
     font-family: "Helvetica Neue";
     font-weight: 200;
 }
-.inpt-num {
-    width: 4em;
-    text-align: right
+#foo {
+    border: 1px solid black;
+    width: 300px;
+    height: 300px;
+    clear: left;
+}
+.tool {
+    float: left;
+    margin-right: 10px;
+}
+.tool .btn {
+    width: 70px;
+    height: 40px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: black;
+    background: white;
+}
+.tool .btn.active {
+    background: black;
+    color: white;
+}
+.drawing {
+    clear: left;
 }
 canvas {
     border: 1px solid #ccc
