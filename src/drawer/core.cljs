@@ -9,7 +9,7 @@
 
 (enable-console-print!)
 
-(def state
+(defonce state
   (r/atom {:tool nil
            :coords []}))
 
@@ -43,38 +43,14 @@
                               activate-tool :circle))}
      "Circle"]]])
 
-(def canvas-dom (by-id "canvas"))
-
-(defonce monet-canvas
-  (canvas/init canvas-dom "2d"))
-
 (def initial-bg {:x 0 :y 0 :w 640 :h 480})
 
 (r/render-component [page] (by-id "app"))
-
-(defn current [k]
-  (canvas/get-entity monet-canvas k))
-
-(canvas/add-entity monet-canvas
-                   :background
-                   (canvas/entity initial-bg
-                                  nil
-                                  (fn [ctx val]
-                                    (-> ctx
-                                        (canvas/fill-style "#ffffff")
-                                        (canvas/fill-rect val)))))
 
 (defn listen [el type]
   (let [c (chan)]
     (events/listen el type (fn [e] (put! c e)))
     c))
-
-(let [c (listen canvas-dom events/EventType.MOUSEMOVE)]
-  (go-loop []
-    (let [e (<! c)]
-      (swap! state assoc :coords {:x (.-offsetX e)
-                                  :y (.-offsetY e)})
-      (recur))))
 
 (defn removed? [key old-state new-state]
   (and (old-state key)
@@ -99,21 +75,49 @@
                  (canvas/stroke-style "#000000")
                  (canvas/stroke)))})
 
-(defonce foo
-  (add-watch
-   state :display-shape
-   (fn [key atom old-state new-state]
-     (cond
+(defn page-did-mount []
+  (let [canvas-dom (by-id "canvas")
+        monet-canvas (canvas/init canvas-dom "2d")
+        c (listen canvas-dom events/EventType.MOUSEMOVE)]
 
-       (removed? :tool old-state new-state)
-       (canvas/remove-entity monet-canvas (old-state :tool))
+    (canvas/add-entity
+     monet-canvas
+     :background
+     (canvas/entity initial-bg
+                    nil
+                    (fn [ctx val]
+                      (-> ctx
+                          (canvas/fill-style "#ffffff")
+                          (canvas/fill-rect val)))))
 
-       (added? :tool old-state new-state)
-       (let [tool (new-state :tool)]
+    (go-loop []
+      (let [e (<! c)]
+        (swap! state assoc :coords {:x (.-offsetX e)
+                                    :y (.-offsetY e)})
+        (recur)))
+
+    (add-watch
+     state :display-shape
+     (fn [key atom old-state new-state]
+       (cond
+
+         (removed? :tool old-state new-state)
          (canvas/remove-entity monet-canvas (old-state :tool))
-         (canvas/add-entity
-          monet-canvas
-          tool
-          (canvas/entity (tool dims)
-                         #(merge % (@state :coords))
-                         (tool draw-fns))))))))
+
+         (added? :tool old-state new-state)
+         (let [tool (new-state :tool)]
+           (canvas/remove-entity monet-canvas (old-state :tool))
+           (canvas/add-entity
+            monet-canvas
+            tool
+            (canvas/entity (tool dims)
+                           #(merge % (@state :coords))
+                           (tool draw-fns)))))))
+    ))
+
+(defn page-component []
+  (r/create-class {:render page
+                   :component-did-mount page-did-mount}))
+
+(r/render-component [page-component]
+                    (by-id "app"))
