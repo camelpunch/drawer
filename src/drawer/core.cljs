@@ -43,14 +43,15 @@
                               activate-tool :circle))}
      "Circle"]]])
 
-(r/render-component [page] (by-id "app"))
-
 (def canvas-dom (by-id "canvas"))
 
 (defonce monet-canvas
   (canvas/init canvas-dom "2d"))
 
 (def initial-bg {:x 0 :y 0 :w 640 :h 480})
+
+(r/render-component [page] (by-id "app"))
+
 (defn current [k]
   (canvas/get-entity monet-canvas k))
 
@@ -83,23 +84,36 @@
   (and (not (nil? (new-state :tool)))
        (not= (old-state :tool) (new-state :tool))))
 
-(add-watch
- state :display-shape
- (fn [key atom old-state new-state]
-   (cond
+(def dims
+  {:square {:x 0 :y 0 :w 100 :h 100}
+   :circle {:x 0 :y 0 :rw 100 :rh 100}})
 
-     (removed? :tool old-state new-state)
-     (canvas/remove-entity monet-canvas (old-state :tool))
+(def draw-fns
+  {:square (fn [ctx val]
+             (-> ctx
+                 (canvas/fill-style "#000000")
+                 (canvas/fill-rect val)))
+   :circle (fn [ctx val]
+             (-> ctx
+                 (canvas/ellipse val)
+                 (canvas/stroke-style "#000000")
+                 (canvas/stroke)))})
 
-     (added? :tool old-state new-state)
-     (let [tool (new-state :tool)]
+(defonce foo
+  (add-watch
+   state :display-shape
+   (fn [key atom old-state new-state]
+     (cond
+
+       (removed? :tool old-state new-state)
        (canvas/remove-entity monet-canvas (old-state :tool))
-       (canvas/add-entity
-        monet-canvas
-        tool
-        (canvas/entity {:x 0 :y 0 :w 100 :h 100}
-                       #(merge % (@state :coords))
-                       (fn [ctx val]
-                         (-> ctx
-                             (canvas/fill-style "#000000")
-                             (canvas/fill-rect val)))))))))
+
+       (added? :tool old-state new-state)
+       (let [tool (new-state :tool)]
+         (canvas/remove-entity monet-canvas (old-state :tool))
+         (canvas/add-entity
+          monet-canvas
+          tool
+          (canvas/entity (tool dims)
+                         #(merge % (@state :coords))
+                         (tool draw-fns))))))))
