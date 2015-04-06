@@ -13,14 +13,12 @@
   (r/atom {:tool nil
            :coords []}))
 
-(defn class-for [state tool]
-  (when (= tool (state :tool))
-    "active"))
+(defn class-for [state k v]
+  (when (= v (state k)) "active"))
 
-(defn activate-tool [state tool]
-  (assoc state :tool
-         (when (not= tool (state :tool))
-           tool)))
+(defn activate [state k v]
+  (assoc state
+         k (when (not= v (state k)) v)))
 
 (defn by-id [id]
   (.getElementById js/document id))
@@ -31,16 +29,14 @@
    [:p.tool
     [:button.btn
      {:id "square"
-      :class (class-for @state :square)
-      :on-click (fn [e] (swap! state
-                              activate-tool :square))}
+      :class (class-for @state :tool :square)
+      :on-click (fn [e] (swap! state activate :tool :square))}
      "Square"]]
    [:p.tool
     [:button.btn
      {:id "circle"
-      :class (class-for @state :circle)
-      :on-click (fn [e] (swap! state
-                              activate-tool :circle))}
+      :class (class-for @state :tool :circle)
+      :on-click (fn [e] (swap! state activate :tool :circle))}
      "Circle"]]])
 
 (def initial-bg {:x 0 :y 0 :w 640 :h 480})
