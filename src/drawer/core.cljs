@@ -45,8 +45,6 @@
 
 (def initial-bg {:x 0 :y 0 :w 640 :h 480})
 
-(r/render-component [page] (by-id "app"))
-
 (defn listen [el type]
   (let [c (chan)]
     (events/listen el type (fn [e] (put! c e)))
