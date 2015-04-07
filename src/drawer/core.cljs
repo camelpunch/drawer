@@ -11,7 +11,7 @@
 
 (defonce state
   (r/atom {:tool nil
-           :coords []}))
+           :coords {:x 0 :y 0}}))
 
 (defn class-for [state k v]
   (when (= v (state k)) "active"))
@@ -99,15 +99,17 @@
          (canvas/remove-entity monet-canvas (old-state :tool))
 
          (added? :tool old-state new-state)
-         (let [tool (new-state :tool)]
-           (canvas/remove-entity monet-canvas (old-state :tool))
-           (canvas/add-entity
-            monet-canvas
-            tool
-            (canvas/entity (tool dims)
-                           #(merge % (@state :coords))
-                           (tool draw-fns)))))))
-    ))
+         (let [old-tool (old-state :tool)
+               new-tool (new-state :tool)
+               dimensions (new-tool dims)
+               draw-fn (new-tool draw-fns)
+               entity (canvas/entity dimensions
+                                     #(merge % (@state :coords))
+                                     draw-fn)]
+           (canvas/remove-entity monet-canvas old-tool)
+           (canvas/add-entity monet-canvas new-tool entity)))))
+
+    (swap! state assoc :tool :square)))
 
 (defn page-component []
   (r/create-class {:render page
