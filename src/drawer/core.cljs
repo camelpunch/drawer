@@ -5,7 +5,7 @@
               [goog.dom :as dom]
               [goog.events :as events]
               [cljs.core.async :refer [chan put!]])
-    (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+    (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (enable-console-print!)
 
@@ -72,7 +72,8 @@
 (defn page-did-mount []
   (let [canvas-dom (by-id "canvas")
         monet-canvas (canvas/init canvas-dom "2d")
-        c (listen canvas-dom events/EventType.MOUSEMOVE)]
+        mouse-moves (listen canvas-dom events/EventType.MOUSEMOVE)
+        mouse-clicks (listen canvas-dom events/EventType.CLICK)]
 
     (canvas/add-entity
      monet-canvas
@@ -85,14 +86,16 @@
                           (canvas/fill-rect val)))))
 
     (go-loop []
-      (let [e (<! c)]
-        (swap! state assoc :coords {:x (.-offsetX e)
-                                    :y (.-offsetY e)})
-        (recur)))
+      (alt!
+        mouse-moves ([e _]
+                     (swap! state assoc
+                            :coords {:x (.-offsetX e)
+                                     :y (.-offsetY e)})
+                     (recur))))
 
     (add-watch
      state :display-shape
-     (fn [key atom old-state new-state]
+     (fn [_ _ old-state new-state]
        (cond
 
          (removed? :tool old-state new-state)
