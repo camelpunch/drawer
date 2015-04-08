@@ -43,10 +43,10 @@
         h 100]
     [shape ((shapes shape) x y w h)]))
 
-(defn switch-to [shape]
+(defn switch-to [section-type section]
   (fn [e]
     (.preventDefault e)
-    (swap! state activate :shape shape)))
+    (swap! state activate section-type section)))
 
 (defn listen [el type]
   (let [c (chan)]
@@ -68,24 +68,22 @@
 
     (swap! state assoc :shape :rect)))
 
+(defn menu-item
+  [menu item human-name]
+  [:li.menu-item
+   [:a.btn
+    {:id (name item)
+     :href "#"
+     :class (class-for @state menu item)
+     :on-click (switch-to menu item)}
+    human-name]])
+
 (defn page []
   [:div
    [:p.inf "Coords:" (str (@state :coords))]
    [:ul.menu
-    [:li.menu-item
-     [:a.btn
-      {:id "square"
-       :href "#square"
-       :class (class-for @state :shape :rect)
-       :on-click (switch-to :rect)}
-      "Square"]]
-    [:li.menu-item
-     [:a.btn
-      {:id "circle"
-       :href "#circle"
-       :class (class-for @state :shape :circle)
-       :on-click (switch-to :circle)}
-      "Circle"]]]
+    [menu-item :shape :rect "Square"]
+    [menu-item :shape :circle "Circle"]]
    [:div.drawing
     [:svg#svg
      [shape]]]
