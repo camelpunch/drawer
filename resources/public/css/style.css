@@ -2,6 +2,15 @@ body {
     font-family: "Helvetica Neue";
     font-weight: 200;
 }
+.logo {
+    float: right;
+    margin: 0;
+    font-size: medium;
+}
+.source {
+    clear: right;
+    float: right;
+}
 .inf {
     height: 1em;
 }
@@ -25,25 +34,33 @@ body {
     text-decoration: none;
     color: black;
     padding: 10px;
+    border-radius: 5px 5px 5px 5px;
 }
 .menu-item .btn.active {
     background: black;
     color: white;
 }
-.drawing {
+.workspace {
     clear: left;
     cursor: crosshair;
 }
-.drawing svg {
+.workspace svg {
     width: 640px;
     height: 480px;
     border: 1px solid black;
+}
+.workspace.inactive, .menu.inactive {
+    display: none;
 }
 .cursor {
     stroke: black;
     stroke-width: 4px;
     fill: white;
 }
-img {
-    display: none
+.key-name {
+    float: left;
+    clear: both;
+}
+.key-desc {
+    float: left;
 }
