@@ -57,9 +57,8 @@
               :x2 (+ x1 w)
               :y2 (+ y1 h)}))})
 
-(defn shape []
-  (let [s @state
-        shape-name (s :shape)
+(defn shape [s]
+  (let [shape-name (s :shape)
         x (get-in s [:coords :x])
         y (get-in s [:coords :y])
         w 100
@@ -144,7 +143,7 @@
     {:class (s/join " " ["workspace"
                          (class-for @state :editor :tile)])}
     [:svg#tile-editor
-     [shape]]]
+     [shape @state]]]
 
    [:h3 "Keys:"]
    [:dl.keys
