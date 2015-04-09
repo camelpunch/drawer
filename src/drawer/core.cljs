@@ -15,7 +15,8 @@
 (defonce state
   (r/atom {:editor :level
            :shape :circle
-           :coords {:x 0 :y 0}}))
+           :coords {:x 0 :y 0}
+           :impressions []}))
 
 (defn class-for [state k v]
   (s/join " " [(s/join "-" (map name [v k]))
@@ -83,17 +84,24 @@
    "T" {:perform #(swap! state switch-to-next :shape [:rect :circle :line])
         :description "Switch to next tool"}})
 
+(defn paint [s]
+  (update-in s [:impressions] conj (shape s)))
+
 (defn page-did-mount []
   (let [tile-editor (by-id "tile-editor")
         level-editor (by-id "level-editor")
         keys (listen js/document events/EventType.KEYUP)
         tile-mouse-moves (listen tile-editor events/EventType.MOUSEMOVE)
+        tile-mouse-clicks (listen tile-editor events/EventType.CLICK)
         level-mouse-moves (listen level-editor events/EventType.MOUSEMOVE)]
 
     (go-loop []
       (alt!
         tile-mouse-moves  ([e _]
                            (swap! state update-coords e)
+                           (recur))
+        tile-mouse-clicks ([e _]
+                           (swap! state paint)
                            (recur))
         level-mouse-moves ([e _]
                            (swap! state update-coords e)
@@ -115,6 +123,9 @@
      :class (class-for @state menu item)
      :on-click (switch-to menu item)}
     human-name]])
+
+(defn add-key [imp]
+  (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
 
 (defn page []
   [:div
@@ -143,6 +154,7 @@
     {:class (s/join " " ["workspace"
                          (class-for @state :editor :tile)])}
     [:svg#tile-editor
+     (map add-key (@state :impressions))
      [shape @state]]]
 
    [:h3 "Keys:"]
