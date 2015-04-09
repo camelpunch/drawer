@@ -12,11 +12,18 @@
 
 (enable-console-print!)
 
+(defn new-tile []
+  {:impressions []})
+
 (defonce state
   (r/atom {:editor :level
            :shape :circle
            :coords {:x 0 :y 0}
-           :impressions []}))
+           :tile :a
+           :tiles {:a (new-tile)
+                   :b (new-tile)
+                   :c (new-tile)
+                   :d (new-tile)}}))
 
 (defn class-for [state k v]
   (s/join " " [(s/join "-" (map name [v k]))
@@ -81,11 +88,16 @@
 (def key-commands
   {"E" {:perform #(swap! state switch-to-next :editor [:level :tile])
         :description "Switch to next editor"}
-   "T" {:perform #(swap! state switch-to-next :shape [:rect :circle :line])
-        :description "Switch to next tool"}})
+   "B" {:perform #(swap! state switch-to-next :shape [:rect :circle :line])
+        :description "Switch to next brush"}
+   "T" {:perform #(swap! state switch-to-next :tile [:a :b :c :d])
+        :description "Switch to next tile"}})
 
 (defn paint [s]
-  (update-in s [:impressions] conj (shape s)))
+  (update-in s [:tiles (s :tile) :impressions] conj (shape s)))
+
+(defn event-charcode [e]
+  (js/String.fromCharCode (.-keyCode e)))
 
 (defn page-did-mount []
   (let [tile-editor (by-id "tile-editor")
@@ -97,20 +109,15 @@
 
     (go-loop []
       (alt!
-        tile-mouse-moves  ([e _]
-                           (swap! state update-coords e)
+        tile-mouse-moves  ([e _] (swap! state update-coords e)
                            (recur))
-        tile-mouse-clicks ([e _]
-                           (swap! state paint)
+        tile-mouse-clicks ([_ _] (swap! state paint)
                            (recur))
-        level-mouse-moves ([e _]
-                           (swap! state update-coords e)
+        level-mouse-moves ([e _] (swap! state update-coords e)
                            (recur))
         keys              ([e _]
-                           (let [code (.-keyCode e)
-                                 charcode (js/String.fromCharCode code)]
-                             ((get-in key-commands [charcode :perform] #()))
-                             (recur)))))
+                           ((get-in key-commands [(event-charcode e) :perform] #()))
+                           (recur))))
 
     (swap! state assoc :shape :rect)))
 
@@ -126,6 +133,9 @@
 
 (defn add-key [imp]
   (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
+
+(defn tile-component [t]
+  (map add-key (t :impressions)))
 
 (defn page []
   [:div
@@ -150,11 +160,19 @@
     [menu-item :shape :rect "Square"]
     [menu-item :shape :circle "Circle"]
     [menu-item :shape :line "Line"]]
+
+   [:ul.menu
+    {:class (class-for @state :editor :tile)}
+    [menu-item :tile :a "Tile A"]
+    [menu-item :tile :b "Tile B"]
+    [menu-item :tile :c "Tile C"]
+    [menu-item :tile :d "Tile D"]]
+
    [:div
     {:class (s/join " " ["workspace"
                          (class-for @state :editor :tile)])}
     [:svg#tile-editor
-     (map add-key (@state :impressions))
+     (tile-component (get-in @state [:tiles (@state :tile)]))
      [shape @state]]]
 
    [:h3 "Keys:"]
