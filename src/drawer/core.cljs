@@ -107,7 +107,7 @@
   (activate s menu (next-item s menu items)))
 
 (defn switch-to-next-tile [s]
-  (switch-to-next s :tile (range (count (s :tiles)))))
+  (switch-to-next s :tile (vec (range (count (s :tiles))))))
 
 (def key-commands
   {"E" {:perform #(swap! state switch-to-next :editor [:level :tile])
@@ -145,13 +145,13 @@
 
     (swap! state assoc :shape :rect)))
 
-(defn menu-item
-  [menu item human-name]
+(defn menu-item [s menu item human-name]
   [:li.menu-item
+   {:key (str menu item human-name)}
    [:a.btn
     {:id (stringify item)
      :href "#"
-     :class (class-for @state menu item)
+     :class (class-for s menu item)
      :on-click (switch-to menu item)}
     human-name]])
 
@@ -171,8 +171,8 @@
    [:main.mn
     [:p (str "Coords: " (@state :coords))]
     [:ul.menu.edtrs
-     [menu-item :editor :level "Level Editor"]
-     [menu-item :editor :tile "Tile Editor"]]
+     [menu-item @state :editor :level "Level Editor"]
+     [menu-item @state :editor :tile "Tile Editor"]]
 
     [:div#level-editor
      {:class (s/join " " ["workspace"
@@ -183,9 +183,9 @@
 
     [:ul.menu.brshs
      {:class (class-for @state :editor :tile)}
-     [menu-item :shape :rect "Square"]
-     [menu-item :shape :circle "Circle"]
-     [menu-item :shape :line "Line"]]
+     [menu-item @state  :shape :rect "Square"]
+     [menu-item @state :shape :circle "Circle"]
+     [menu-item @state :shape :line "Line"]]
 
     [:div
      {:class (s/join " " ["workspace"
@@ -197,14 +197,15 @@
       [shape @state]]]
 
     [:ul.menu
-     (for [tile (@state :tiles)]
-       [menu-item :tile (tile :id) (tile :name)])]]
+     (let [s @state]
+       (map #(menu-item s :tile (% :id) (% :name))
+            (s :tiles)))]]
 
    [:aside.asd
     [:h3 "Keys:"]
     [:dl.keys
      (mapcat (fn [[k {description :description}]]
-               [[:dt.key-name {:key k} k]
+               [[:dt.key-name {:key (str k description)} k]
                 [:dd.key-desc {:key description} description]])
              key-commands)]]])
 
