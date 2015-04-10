@@ -12,25 +12,30 @@
 
 (enable-console-print!)
 
-(defn new-tile []
-  {:impressions []})
+(def num-tiles 4)
+(def tile-width 100)
+(def tiles-wide 5)
+(def tiles-high 4)
+
+(defn new-tile [id]
+  {:id id
+   :name (str "Tile " (inc id))
+   :impressions []})
 
 (defonce state
   (r/atom {:editor :level
            :shape :circle
            :coords {:x 0 :y 0}
-           :tile :a
-           :tiles {:a (new-tile)
-                   :b (new-tile)
-                   :c (new-tile)
-                   :d (new-tile)}}))
+           :tile 0
+           :tiles (->> (range num-tiles)
+                       (map new-tile)
+                       vec)}))
 
-(def tile-width 100)
-(def tiles-wide 5)
-(def tiles-high 4)
+(defn stringify [x]
+  (s/replace (str x) #"^:" ""))
 
 (defn class-for [state k v]
-  (s/join " " [(s/join "-" (map name [v k]))
+  (s/join " " [(s/join "-" (map stringify [v k]))
            (if (= v (state k)) "active" "inactive")]))
 
 (defn activate [state k v]
@@ -100,12 +105,15 @@
 (defn switch-to-next [s menu items]
   (activate s menu (next-item s menu items)))
 
+(defn switch-to-next-tile [s]
+  (switch-to-next s :tile (range (count (s :tiles)))))
+
 (def key-commands
   {"E" {:perform #(swap! state switch-to-next :editor [:level :tile])
         :description "Switch to next editor"}
    "B" {:perform #(swap! state switch-to-next :shape [:rect :circle :line])
         :description "Switch to next brush"}
-   "T" {:perform #(swap! state switch-to-next :tile [:a :b :c :d])
+   "T" {:perform #(swap! state switch-to-next-tile)
         :description "Switch to next tile"}})
 
 (defn paint [s]
@@ -140,7 +148,7 @@
   [menu item human-name]
   [:li.menu-item
    [:a.btn
-    {:id (name item)
+    {:id (stringify item)
      :href "#"
      :class (class-for @state menu item)
      :on-click (switch-to menu item)}
@@ -188,10 +196,8 @@
       [shape @state]]]
 
     [:ul.menu
-     [menu-item :tile :a "Tile A"]
-     [menu-item :tile :b "Tile B"]
-     [menu-item :tile :c "Tile C"]
-     [menu-item :tile :d "Tile D"]]]
+     (for [tile (@state :tiles)]
+       [menu-item :tile (tile :id) (tile :name)])]]
 
    [:aside.asd
     [:h3 "Keys:"]
