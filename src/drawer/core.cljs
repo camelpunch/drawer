@@ -110,11 +110,11 @@
   (switch-to-next s :tile (vec (range (count (s :tiles))))))
 
 (def key-commands
-  {"E" {:perform #(swap! state switch-to-next :editor [:level :tile])
+  {"E" {:transition #(switch-to-next % :editor [:level :tile])
         :description "Switch to next editor"}
-   "B" {:perform #(swap! state switch-to-next :shape [:rect :circle :line])
+   "B" {:transition #(switch-to-next % :shape [:rect :circle :line])
         :description "Switch to next brush"}
-   "T" {:perform #(swap! state switch-to-next-tile)
+   "T" {:transition switch-to-next-tile
         :description "Switch to next tile"}})
 
 (defn paint [s]
@@ -206,7 +206,11 @@
         level-mouse-moves ([e _] (swap! state update-grid-coords e)
                            (recur))
         keys              ([e _]
-                           ((get-in key-commands [(event-charcode e) :perform] #()))
+                           (swap! state
+                                  (get-in key-commands
+                                          [(event-charcode e)
+                                           :transition]
+                                          identity))
                            (recur))
         stopper           :stopped))
 
