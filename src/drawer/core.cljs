@@ -39,8 +39,9 @@
            (if (= v (state k)) "active" "inactive")]))
 
 (defn activate [state k v]
-  (assoc state
-         k (when (not= v (state k)) v)))
+  (if (not= v (state k))
+    (assoc state k v)
+    state))
 
 (defn by-id [id]
   (.getElementById js/document id))
