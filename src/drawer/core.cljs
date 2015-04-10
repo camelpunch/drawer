@@ -3,7 +3,10 @@
               [goog.dom :as dom]
               [goog.events :as events]
               [clojure.string :as s]
-              [cljs.core.async :refer [chan put!]])
+              [cljs.core.async :refer [chan put!]]
+              [drawer.commands :as c]
+              [drawer.page-components :as pc]
+              [drawer.keybindings :as kb])
     (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (comment
@@ -11,11 +14,6 @@
   )
 
 (enable-console-print!)
-
-(def num-tiles 4)
-(def tile-width 100)
-(def tiles-wide 5)
-(def tiles-high 4)
 
 (defn new-tile [id]
   {:id id
@@ -27,24 +25,12 @@
            :shape :circle
            :coords {:x 0 :y 0}
            :tile 0
-           :tiles (->> (range num-tiles)
+           :tiles (->> (range 4)
                        (map new-tile)
-                       vec)}))
-
-(defn stringify [x]
-  (s/replace (str x) #"^:" ""))
-
-(defn class-for [current k v]
-  (s/join " " [(s/join "-" (map stringify [v k]))
-           (if (= v current) "active" "inactive")]))
-
-(defn activate [state k v]
-  (if (not= v (state k))
-    (assoc state k v)
-    state))
-
-(defn by-id [id]
-  (.getElementById js/document id))
+                       vec)
+           :tile-width 100
+           :tiles-wide 5
+           :tiles-high 4}))
 
 (defn listen [el type]
   (let [c (chan)]
@@ -54,144 +40,14 @@
 (defn coords-from-event [e]
   {:x (.-offsetX e) :y (.-offsetY e)})
 
-(defn update-coords [s e]
-  (assoc s :coords (coords-from-event e)))
-
-(defn grid-align [pos]
-  (- pos (mod pos tile-width)))
-
-(defn update-grid-coords [s e]
-  (assoc s :coords (-> (coords-from-event e)
-                       (update-in [:x] grid-align)
-                       (update-in [:y] grid-align))))
-
-(def shapes
-  {:circle (fn [x y w h]
-             {:class "cursor circle"
-              :cx x
-              :cy y
-              :r (/ w 2)})
-   :rect (fn [x y w h]
-           {:class "cursor square"
-            :x (- x (/ w 2))
-            :y (- y (/ h 2))
-            :width w
-            :height h})
-   :line (fn [x y w h]
-           (let [x1 (- x (/ w 2))
-                 y1 (- y (/ h 2))]
-             {:class "cursor line"
-              :x1 x1
-              :y1 y1
-              :x2 (+ x1 w)
-              :y2 (+ y1 h)}))})
-
-(defn shape [s]
-  (let [shape-name (s :shape)
-        x (get-in s [:coords :x])
-        y (get-in s [:coords :y])
-        w 100
-        h 100]
-    [shape-name ((shapes shape-name) x y w h)]))
-
-(defn switch-to [section-type section]
-  (fn [e]
-    (.preventDefault e)
-    (swap! state activate section-type section)))
-
-(defn next-item [s menu items]
-  (let [current (s menu)]
-    (->> items cycle (drop-while #(not= current %)) fnext)))
-
-(defn switch-to-next [s menu items]
-  (activate s menu (next-item s menu items)))
-
-(defn switch-to-next-tile [s]
-  (switch-to-next s :tile (vec (range (count (s :tiles))))))
-
-(def key-commands
-  {"E" {:transition #(switch-to-next % :editor [:level :tile])
-        :description "Switch to next editor"}
-   "B" {:transition #(switch-to-next % :shape [:rect :circle :line])
-        :description "Switch to next brush"}
-   "T" {:transition switch-to-next-tile
-        :description "Switch to next tile"}})
-
-(defn paint [s]
-  (update-in s [:tiles (s :tile) :impressions] conj (shape s)))
-
 (defn event-charcode [e]
   (js/String.fromCharCode (.-keyCode e)))
-
-(defn menu-item [s menu item human-name]
-  [:li.menu-item
-   {:key (str menu item human-name)}
-   [:a.btn
-    {:id (stringify item)
-     :href "#"
-     :class (class-for (s menu) menu item)
-     :on-click (switch-to menu item)}
-    human-name]])
-
-(defn add-key [imp]
-  (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
-
-(defn tile-component [t]
-  (map add-key (t :impressions)))
-
-(defn page []
-  [:div.ctnr
-   [:header.hd
-    [:h1.logo "Drawer"]
-    [:p.source
-     [:a {:href "https://github.com/camelpunch/drawer"} "GitHub"]]]
-
-   [:main.mn
-    [:p (str "Coords: " (@state :coords))]
-    [:ul.menu.edtrs
-     [menu-item @state :editor :level "Level Editor"]
-     [menu-item @state :editor :tile "Tile Editor"]]
-
-    [:div#level-editor
-     {:class (s/join " " ["workspace"
-                          (class-for (@state :editor) :editor :level)])}
-     [:svg#level-editor
-      {:width (* tiles-wide tile-width)
-       :height (* tiles-high tile-width)}]]
-
-    [:ul.menu.brshs
-     {:class (class-for (@state :editor) :editor :tile)}
-     [menu-item @state  :shape :rect "Square"]
-     [menu-item @state :shape :circle "Circle"]
-     [menu-item @state :shape :line "Line"]]
-
-    [:div
-     {:class (s/join " " ["workspace"
-                          (class-for (@state :editor) :editor :tile)])}
-     [:svg#tile-editor
-      {:width (* tiles-wide tile-width)
-       :height (* tiles-high tile-width)}
-      (tile-component (get-in @state [:tiles (@state :tile)]))
-      [shape @state]]]
-
-    [:ul.menu
-     (let [s @state]
-       (map #(menu-item s :tile (% :id) (% :name))
-            (s :tiles)))]]
-
-   [:aside.asd
-    [:h3 "Keys:"]
-    [:dl.keys
-     (mapcat (fn [[k {description :description}]]
-               [[:dt.key-name {:key (str k description)} k]
-                [:dd.key-desc {:key description} description]])
-             key-commands)]]])
 
 (defonce stopper (chan))
 
 (defn page-did-mount []
-  (let [tile-editor (by-id "tile-editor")
-        level-editor (by-id "level-editor")
+  (let [tile-editor (dom/getElement "tile-editor")
+        level-editor (dom/getElement "level-editor")
         keys (listen js/document events/EventType.KEYUP)
         tile-mouse-moves (listen tile-editor events/EventType.MOUSEMOVE)
         tile-mouse-clicks (listen tile-editor events/EventType.CLICK)
@@ -199,15 +55,15 @@
 
     (go-loop []
       (alt!
-        tile-mouse-moves  ([e _] (swap! state update-coords e)
+        tile-mouse-moves  ([e _] (swap! state c/update-coords (coords-from-event e))
                            (recur))
-        tile-mouse-clicks ([_ _] (swap! state paint)
+        tile-mouse-clicks ([_ _] (swap! state c/paint)
                            (recur))
-        level-mouse-moves ([e _] (swap! state update-grid-coords e)
+        level-mouse-moves ([e _] (swap! state c/update-grid-coords (coords-from-event e))
                            (recur))
         keys              ([e _]
                            (swap! state
-                                  (get-in key-commands
+                                  (get-in kb/key-commands
                                           [(event-charcode e)
                                            :transition]
                                           identity))
@@ -217,7 +73,7 @@
     (swap! state assoc :shape :rect)))
 
 (defn page-component []
-  (r/create-class {:render page
+  (r/create-class {:render #(pc/page state)
                    :component-did-mount page-did-mount}))
 
 (defn stop []
@@ -225,4 +81,4 @@
 
 (defn mount-root! []
   (r/render-component [page-component]
-                      (by-id "app")))
+                      (dom/getElement "app")))
