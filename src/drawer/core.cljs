@@ -123,28 +123,6 @@
 (defn event-charcode [e]
   (js/String.fromCharCode (.-keyCode e)))
 
-(defn page-did-mount []
-  (let [tile-editor (by-id "tile-editor")
-        level-editor (by-id "level-editor")
-        keys (listen js/document events/EventType.KEYUP)
-        tile-mouse-moves (listen tile-editor events/EventType.MOUSEMOVE)
-        tile-mouse-clicks (listen tile-editor events/EventType.CLICK)
-        level-mouse-moves (listen level-editor events/EventType.MOUSEMOVE)]
-
-    (go-loop []
-      (alt!
-        tile-mouse-moves  ([e _] (swap! state update-coords e)
-                           (recur))
-        tile-mouse-clicks ([_ _] (swap! state paint)
-                           (recur))
-        level-mouse-moves ([e _] (swap! state update-grid-coords e)
-                           (recur))
-        keys              ([e _]
-                           ((get-in key-commands [(event-charcode e) :perform] #()))
-                           (recur))))
-
-    (swap! state assoc :shape :rect)))
-
 (defn menu-item [s menu item human-name]
   [:li.menu-item
    {:key (str menu item human-name)}
@@ -209,9 +187,38 @@
                 [:dd.key-desc {:key description} description]])
              key-commands)]]])
 
+(defonce stopper (chan))
+
+(defn page-did-mount []
+  (let [tile-editor (by-id "tile-editor")
+        level-editor (by-id "level-editor")
+        keys (listen js/document events/EventType.KEYUP)
+        tile-mouse-moves (listen tile-editor events/EventType.MOUSEMOVE)
+        tile-mouse-clicks (listen tile-editor events/EventType.CLICK)
+        level-mouse-moves (listen level-editor events/EventType.MOUSEMOVE)]
+
+    (go-loop []
+      (alt!
+        tile-mouse-moves  ([e _] (swap! state update-coords e)
+                           (recur))
+        tile-mouse-clicks ([_ _] (swap! state paint)
+                           (recur))
+        level-mouse-moves ([e _] (swap! state update-grid-coords e)
+                           (recur))
+        keys              ([e _]
+                           ((get-in key-commands [(event-charcode e) :perform] #()))
+                           (recur))
+        stopper           :stopped))
+
+    (swap! state assoc :shape :rect)))
+
 (defn page-component []
   (r/create-class {:render page
                    :component-did-mount page-did-mount}))
 
-(r/render-component [page-component]
-                    (by-id "app"))
+(defn stop []
+  (put! stopper :please-stop))
+
+(defn mount-root! []
+  (r/render-component [page-component]
+                      (by-id "app")))

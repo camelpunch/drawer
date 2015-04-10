@@ -31,7 +31,7 @@
                          :source-map-timestamp true
                          :cache-analysis true }}
              {:id "min"
-              :source-paths ["src"]
+              :source-paths ["src" "prod_src"]
               :compiler {:output-to "resources/public/js/compiled/drawer.js"
                          :main drawer.core
                          :optimizations :advanced

@@ -1,10 +1,11 @@
 (ns drawer.dev
     (:require
-     [drawer.core]
+     [drawer.core :as core]
      [figwheel.client :as fw]))
 
-(fw/start {
-  :websocket-url "ws://localhost:3449/figwheel-ws"
-  :on-jsload (fn []
-               ;; (stop-and-start-my app)
-               )})
+(fw/start {:websocket-url "ws://localhost:3449/figwheel-ws"
+           :on-jsload (fn []
+                        (core/stop)
+                        (core/mount-root!))})
+
+(core/mount-root!)
