@@ -1,5 +1,5 @@
 (ns drawer.commands
-  (:require [drawer.shapes :refer [shape]]))
+  (:require [drawer.shapes :as sh]))
 
 (defn activate [state k v]
   (if (not= v (state k))
@@ -22,11 +22,11 @@
 (defn grid-align [pos grid]
   (- pos (mod pos grid)))
 
-(defn update-grid-coords [s coords]
-  (let [tile-width (s :tile-width)]
-    (assoc s :coords (-> coords
-                         (update-in [:x] #(grid-align % tile-width))
-                         (update-in [:y] #(grid-align % tile-width))))))
+(defn update-grid-coords [{:keys [tile-width] :as s} coords]
+  (assoc s :coords (-> coords
+                       (update-in [:x] #(grid-align % tile-width))
+                       (update-in [:y] #(grid-align % tile-width)))))
 
-(defn paint [s]
-  (update-in s [:tiles (s :tile) :impressions] conj (shape s)))
+(defn paint [{:keys [tile shape coords] :as s}]
+  (update-in s [:tiles tile :impressions]
+             conj (sh/shape shape coords)))

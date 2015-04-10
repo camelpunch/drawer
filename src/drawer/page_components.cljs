@@ -4,16 +4,16 @@
             [drawer.shapes :as sh]
             [drawer.keybindings :as kb]))
 
-(defn add-key [imp]
+(defn- add-key [imp]
   (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
 
-(defn tile-component [t]
+(defn- tile-component [t]
   (map add-key (t :impressions)))
 
-(defn stringify [x]
+(defn- stringify [x]
   (s/replace (str x) #"^:" ""))
 
-(defn class-for [current k v]
+(defn- class-for [current k v]
   (s/join " " [(s/join "-" (map stringify [v k]))
            (if (= v current) "active" "inactive")]))
 
@@ -23,13 +23,13 @@
                       (.preventDefault e)
                       (swap! state c/activate section-type section)))
 
-        menu-item (fn [current-menu menu item human-name]
+        menu-item (fn [current-item menu item human-name]
                     [:li.menu-item
                      {:key (str menu item human-name)}
                      [:a.btn
                       {:id (stringify item)
                        :href "#"
-                       :class (class-for current-menu menu item)
+                       :class (class-for current-item menu item)
                        :on-click (switch-to menu item)}
                       human-name]])
 
@@ -67,7 +67,7 @@
         {:width (* tiles-wide tile-width)
          :height (* tiles-high tile-width)}
         (tile-component (tiles tile))
-        [sh/shape @state]]]
+        [sh/shape shape coords]]]
 
       [:ul.menu
        (let [s @state]

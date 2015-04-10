@@ -21,10 +21,9 @@
               :x2 (+ x1 w)
               :y2 (+ y1 h)}))})
 
-(defn shape [s]
-  (let [shape-name (s :shape)
-        x (get-in s [:coords :x])
-        y (get-in s [:coords :y])
+(defn shape [shape-name coords]
+  (let [x (coords :x)
+        y (coords :y)
         w 100
         h 100]
     [shape-name ((shapes shape-name) x y w h)]))
