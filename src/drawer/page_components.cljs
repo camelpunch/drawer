@@ -8,7 +8,8 @@
   (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
 
 (defn- tile-component [{impressions :impressions}]
-  (map add-impression-key impressions))
+  [:g (when-not (empty? impressions)
+        (map add-impression-key impressions))])
 
 (defn- stringify [x]
   "Like name, but works with numbers."
@@ -34,7 +35,7 @@
                        :on-click (switch-to menu item)}
                       human-name]])
 
-        {:keys [coords editor shape tiles tile
+        {:keys [tile-coords level-coords editor shape tiles tile
                 tiles-wide tiles-high tile-width]} @state]
     [:div.ctnr
      [:header.hd
@@ -43,7 +44,8 @@
        [:a {:href "https://github.com/camelpunch/drawer"} "GitHub"]]]
 
      [:main.mn
-      [:p (str "Coords: " coords)]
+      [:p (str "Level coords: " level-coords)]
+      [:p (str "Tile coords: " tile-coords)]
       [:ul.menu.edtrs
        [menu-item editor :editor :level "Level Editor"]
        [menu-item editor :editor :tile "Tile Editor"]]
@@ -67,13 +69,12 @@
        [:svg#tile-editor
         {:width (* tiles-wide tile-width)
          :height (* tiles-high tile-width)}
-        (tile-component (tiles tile))
-        [sh/shape shape coords]]]
+        [tile-component (tiles tile)]
+        [sh/shape shape tile-coords]]]
 
       [:ul.menu
-       (let [s @state]
-         (map #(menu-item tile :tile (% :id) (% :name))
-              (s :tiles)))]]
+       (map #(menu-item tile :tile (% :id) (% :name))
+            tiles)]]
 
      [:aside.asd
       [:h3 "Keys:"]

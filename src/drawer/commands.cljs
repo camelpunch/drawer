@@ -16,17 +16,15 @@
 (defn switch-to-next-tile [s]
   (switch-to-next s :tile (vec (range (count (s :tiles))))))
 
-(defn update-coords [s coords]
-  (assoc s :coords coords))
-
 (defn grid-align [pos grid]
   (- pos (mod pos grid)))
 
-(defn update-grid-coords [{:keys [tile-width] :as s} coords]
-  (assoc s :coords (-> coords
-                       (update-in [:x] #(grid-align % tile-width))
-                       (update-in [:y] #(grid-align % tile-width)))))
+(defn update-level-coords [{:keys [tile-width] :as s} coords]
+  (assoc s :level-coords
+         (-> coords
+             (update-in [:x] #(grid-align % tile-width))
+             (update-in [:y] #(grid-align % tile-width)))))
 
-(defn paint [{:keys [tile shape coords] :as s}]
+(defn paint [{:keys [tile shape tile-coords] :as s}]
   (update-in s [:tiles tile :impressions]
-             conj (sh/shape shape coords)))
+             conj (sh/shape shape tile-coords)))

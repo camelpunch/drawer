@@ -23,7 +23,8 @@
 (defonce state
   (r/atom {:editor :level
            :shape :circle
-           :coords {:x 0 :y 0}
+           :level-coords {:x 0 :y 0}
+           :tile-coords {:x 0 :y 0}
            :tile 0
            :tiles (->> (range 4)
                        (map new-tile)
@@ -55,11 +56,11 @@
 
     (go-loop []
       (alt!
-        tile-mouse-moves  ([e _] (swap! state c/update-coords (coords-from-event e))
+        tile-mouse-moves  ([e _] (swap! state assoc :tile-coords (coords-from-event e))
                            (recur))
         tile-mouse-clicks ([_ _] (swap! state c/paint)
                            (recur))
-        level-mouse-moves ([e _] (swap! state c/update-grid-coords (coords-from-event e))
+        level-mouse-moves ([e _] (swap! state c/update-level-coords (coords-from-event e))
                            (recur))
         keys              ([e _]
                            (swap! state
