@@ -34,9 +34,9 @@
 (defn stringify [x]
   (s/replace (str x) #"^:" ""))
 
-(defn class-for [state k v]
+(defn class-for [current k v]
   (s/join " " [(s/join "-" (map stringify [v k]))
-           (if (= v (state k)) "active" "inactive")]))
+           (if (= v current) "active" "inactive")]))
 
 (defn activate [state k v]
   (if (not= v (state k))
@@ -129,7 +129,7 @@
    [:a.btn
     {:id (stringify item)
      :href "#"
-     :class (class-for s menu item)
+     :class (class-for (s menu) menu item)
      :on-click (switch-to menu item)}
     human-name]])
 
@@ -154,20 +154,20 @@
 
     [:div#level-editor
      {:class (s/join " " ["workspace"
-                          (class-for @state :editor :level)])}
+                          (class-for (@state :editor) :editor :level)])}
      [:svg#level-editor
       {:width (* tiles-wide tile-width)
        :height (* tiles-high tile-width)}]]
 
     [:ul.menu.brshs
-     {:class (class-for @state :editor :tile)}
+     {:class (class-for (@state :editor) :editor :tile)}
      [menu-item @state  :shape :rect "Square"]
      [menu-item @state :shape :circle "Circle"]
      [menu-item @state :shape :line "Line"]]
 
     [:div
      {:class (s/join " " ["workspace"
-                          (class-for @state :editor :tile)])}
+                          (class-for (@state :editor) :editor :tile)])}
      [:svg#tile-editor
       {:width (* tiles-wide tile-width)
        :height (* tiles-high tile-width)}
