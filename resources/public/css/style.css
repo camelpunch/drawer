@@ -2,10 +2,23 @@ body {
     font-family: "Helvetica Neue";
     font-weight: 200;
 }
-.logo {
+.ctnr {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.mn {
+    float: left;
+}
+.asd {
+    clear: right;
     float: right;
+}
+.hd {
+   float: right;
+}
+.logo {
     margin: 0;
-    font-size: medium;
+    font-size: x-large;
 }
 .source {
     clear: right;
@@ -18,6 +31,15 @@ body {
     padding: 1em 0 0 0;
     margin: 0;
     height: 3em;
+}
+.menu.edtrs {
+    float: left;
+}
+.menu.brshs {
+    float: right;
+}
+.menu .menu-item:last-child {
+    margin-right: 0;
 }
 .menu-item {
     float: left;
@@ -45,8 +67,6 @@ body {
     cursor: crosshair;
 }
 .workspace svg {
-    width: 640px;
-    height: 480px;
     border: 1px solid black;
 }
 .workspace.inactive, .menu.inactive {

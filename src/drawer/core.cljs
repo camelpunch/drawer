@@ -25,6 +25,10 @@
                    :c (new-tile)
                    :d (new-tile)}}))
 
+(def tile-width 100)
+(def tiles-wide 5)
+(def tiles-high 4)
+
 (defn class-for [state k v]
   (s/join " " [(s/join "-" (map name [v k]))
            (if (= v (state k)) "active" "inactive")]))
@@ -41,8 +45,19 @@
     (events/listen el type (fn [e] (put! c e)))
     c))
 
+(defn coords-from-event [e]
+  {:x (.-offsetX e) :y (.-offsetY e)})
+
 (defn update-coords [s e]
-  (assoc s :coords {:x (.-offsetX e) :y (.-offsetY e)}))
+  (assoc s :coords (coords-from-event e)))
+
+(defn grid-align [pos]
+  (- pos (mod pos tile-width)))
+
+(defn update-grid-coords [s e]
+  (assoc s :coords (-> (coords-from-event e)
+                       (update-in [:x] grid-align)
+                       (update-in [:y] grid-align))))
 
 (def shapes
   {:circle (fn [x y w h]
@@ -113,7 +128,7 @@
                            (recur))
         tile-mouse-clicks ([_ _] (swap! state paint)
                            (recur))
-        level-mouse-moves ([e _] (swap! state update-coords e)
+        level-mouse-moves ([e _] (swap! state update-grid-coords e)
                            (recur))
         keys              ([e _]
                            ((get-in key-commands [(event-charcode e) :perform] #()))
@@ -138,49 +153,53 @@
   (map add-key (t :impressions)))
 
 (defn page []
-  [:div
-   [:h1.logo "Drawer"]
-   [:p.source
-    [:a {:href "https://github.com/camelpunch/drawer"} "GitHub"]]
-   [:p (str "Coords: " (@state :coords))]
-   [:ul.menu
-    [menu-item :editor :level "Level Editor"]
-    [menu-item :editor :tile "Tile Editor"]]
+  [:div.ctnr
+   [:header.hd
+    [:h1.logo "Drawer"]
+    [:p.source
+     [:a {:href "https://github.com/camelpunch/drawer"} "GitHub"]]]
 
-   [:ul.menu
-    {:class (class-for @state :editor :level)}
-    [menu-item :selected-tile :tile1 "Tile1"]]
-   [:div#level-editor
-    {:class (s/join " " ["workspace"
-                         (class-for @state :editor :level)])}
-    [:svg#level-editor]]
+   [:main.mn
+    [:p (str "Coords: " (@state :coords))]
+    [:ul.menu.edtrs
+     [menu-item :editor :level "Level Editor"]
+     [menu-item :editor :tile "Tile Editor"]]
 
-   [:ul.menu
-    {:class (class-for @state :editor :tile)}
-    [menu-item :shape :rect "Square"]
-    [menu-item :shape :circle "Circle"]
-    [menu-item :shape :line "Line"]]
+    [:div#level-editor
+     {:class (s/join " " ["workspace"
+                          (class-for @state :editor :level)])}
+     [:svg#level-editor
+      {:width (* tiles-wide tile-width)
+       :height (* tiles-high tile-width)}]]
 
-   [:ul.menu
-    {:class (class-for @state :editor :tile)}
-    [menu-item :tile :a "Tile A"]
-    [menu-item :tile :b "Tile B"]
-    [menu-item :tile :c "Tile C"]
-    [menu-item :tile :d "Tile D"]]
+    [:ul.menu.brshs
+     {:class (class-for @state :editor :tile)}
+     [menu-item :shape :rect "Square"]
+     [menu-item :shape :circle "Circle"]
+     [menu-item :shape :line "Line"]]
 
-   [:div
-    {:class (s/join " " ["workspace"
-                         (class-for @state :editor :tile)])}
-    [:svg#tile-editor
-     (tile-component (get-in @state [:tiles (@state :tile)]))
-     [shape @state]]]
+    [:div
+     {:class (s/join " " ["workspace"
+                          (class-for @state :editor :tile)])}
+     [:svg#tile-editor
+      {:width (* tiles-wide tile-width)
+       :height (* tiles-high tile-width)}
+      (tile-component (get-in @state [:tiles (@state :tile)]))
+      [shape @state]]]
 
-   [:h3 "Keys:"]
-   [:dl.keys
-    (mapcat (fn [[k {description :description}]]
-              [[:dt.key-name {:key k} k]
-               [:dd.key-desc {:key description} description]])
-            key-commands)]])
+    [:ul.menu
+     [menu-item :tile :a "Tile A"]
+     [menu-item :tile :b "Tile B"]
+     [menu-item :tile :c "Tile C"]
+     [menu-item :tile :d "Tile D"]]]
+
+   [:aside.asd
+    [:h3 "Keys:"]
+    [:dl.keys
+     (mapcat (fn [[k {description :description}]]
+               [[:dt.key-name {:key k} k]
+                [:dd.key-desc {:key description} description]])
+             key-commands)]]])
 
 (defn page-component []
   (r/create-class {:render page
