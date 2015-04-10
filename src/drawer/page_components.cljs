@@ -4,13 +4,14 @@
             [drawer.shapes :as sh]
             [drawer.keybindings :as kb]))
 
-(defn- add-key [imp]
+(defn- add-impression-key [imp]
   (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
 
-(defn- tile-component [t]
-  (map add-key (t :impressions)))
+(defn- tile-component [{impressions :impressions}]
+  (map add-impression-key impressions))
 
 (defn- stringify [x]
+  "Like name, but works with numbers."
   (s/replace (str x) #"^:" ""))
 
 (defn- class-for [current k v]
