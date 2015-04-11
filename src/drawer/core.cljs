@@ -31,7 +31,8 @@
                        vec)
            :tile-width 100
            :tiles-wide 5
-           :tiles-high 4}))
+           :tiles-high 4
+           :level {:impressions []}}))
 
 (defn listen [el type]
   (let [c (chan)]
@@ -52,23 +53,26 @@
         keys (listen js/document events/EventType.KEYUP)
         tile-mouse-moves (listen tile-editor events/EventType.MOUSEMOVE)
         tile-mouse-clicks (listen tile-editor events/EventType.CLICK)
-        level-mouse-moves (listen level-editor events/EventType.MOUSEMOVE)]
+        level-mouse-moves (listen level-editor events/EventType.MOUSEMOVE)
+        level-mouse-clicks (listen level-editor events/EventType.CLICK)]
 
     (go-loop []
       (alt!
-        tile-mouse-moves  ([e _] (swap! state assoc :tile-coords (coords-from-event e))
-                           (recur))
-        tile-mouse-clicks ([_ _] (swap! state c/paint)
-                           (recur))
-        level-mouse-moves ([e _] (swap! state c/update-level-coords (coords-from-event e))
-                           (recur))
-        keys              ([e _]
-                           (swap! state
-                                  (get-in kb/key-commands
-                                          [(event-charcode e)
-                                           :transition]
-                                          identity))
-                           (recur))
+        tile-mouse-moves   ([e _] (swap! state assoc :tile-coords (coords-from-event e))
+                            (recur))
+        tile-mouse-clicks  ([_ _] (swap! state c/paint)
+                            (recur))
+        level-mouse-moves  ([e _] (swap! state c/update-level-coords (coords-from-event e))
+                            (recur))
+        level-mouse-clicks ([e _] (swap! state c/paint-tile)
+                            (recur))
+        keys               ([e _]
+                            (swap! state
+                                   (get-in kb/key-commands
+                                           [(event-charcode e)
+                                            :transition]
+                                           identity))
+                            (recur))
         stopper           :stopped))
 
     (swap! state assoc :shape :rect)))

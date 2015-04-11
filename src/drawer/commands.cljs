@@ -28,3 +28,8 @@
 (defn paint [{:keys [tile shape tile-coords] :as s}]
   (update-in s [:tiles tile :impressions]
              conj (sh/shape shape tile-coords)))
+
+(defn paint-tile [{:keys [tile level-coords] :as  s}]
+  (update-in s [:level :impressions]
+             conj {:tile tile
+                   :coords level-coords}))

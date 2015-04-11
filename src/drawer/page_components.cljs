@@ -16,13 +16,13 @@
       (map add-impression-key impressions))]))
 
 (defn- level-tile-component
-  [current-tile {:keys [level-coords tiles-wide tiles-high]}]
+  [tile coords tiles-wide tiles-high]
   (tile-component
-   current-tile
-   (merge level-coords {:viewBox (str "0 0 "
-                                      (* tiles-wide 1000)
-                                      " "
-                                      (* tiles-high 1000))})))
+   tile
+   (merge coords {:viewBox (str "0 0 "
+                                (* tiles-wide 1000)
+                                " "
+                                (* tiles-high 1000))})))
 
 (defn- stringify [x]
   "Like name, but works with numbers."
@@ -48,7 +48,7 @@
                        :on-click (switch-to menu item)}
                       human-name]])
 
-        {:keys [tile-coords level-coords editor shape tiles tile
+        {:keys [tile-coords level-coords editor shape tiles tile level
                 tiles-wide tiles-high tile-width]} @state
 
         current-tile (get tiles tile)]
@@ -71,7 +71,13 @@
        [:svg#level-editor
         {:width (* tiles-wide tile-width)
          :height (* tiles-high tile-width)}
-        [level-tile-component current-tile @state]]]
+        (for [{tile-index :tile coords :coords} (level :impressions)]
+          (let [tile (get tiles tile-index)]
+            ^{:key (str "level-tile-" tile-index (rand-int 99999))}
+            [level-tile-component
+             tile coords tiles-wide tiles-high]))
+        [level-tile-component
+         current-tile level-coords tiles-wide tiles-high]]]
 
       [:ul.menu.brshs
        {:class (class-for editor :editor :tile)}
