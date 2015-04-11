@@ -7,9 +7,22 @@
 (defn- add-impression-key [imp]
   (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
 
-(defn- tile-component [{impressions :impressions}]
-  [:g (when-not (empty? impressions)
-        (map add-impression-key impressions))])
+(defn- tile-component
+  ([tile]
+   (tile-component tile {:x 0 :y 0}))
+  ([{impressions :impressions} attrs]
+   [:svg attrs
+    (when-not (empty? impressions)
+      (map add-impression-key impressions))]))
+
+(defn- level-tile-component
+  [current-tile {:keys [level-coords tiles-wide tiles-high]}]
+  (tile-component
+   current-tile
+   (merge level-coords {:viewBox (str "0 0 "
+                                      (* tiles-wide 1000)
+                                      " "
+                                      (* tiles-high 1000))})))
 
 (defn- stringify [x]
   "Like name, but works with numbers."
@@ -36,7 +49,9 @@
                       human-name]])
 
         {:keys [tile-coords level-coords editor shape tiles tile
-                tiles-wide tiles-high tile-width]} @state]
+                tiles-wide tiles-high tile-width]} @state
+
+        current-tile (get tiles tile)]
     [:div.ctnr
      [:header.hd
       [:h1.logo "Drawer"]
@@ -55,7 +70,8 @@
                             (class-for editor :editor :level)])}
        [:svg#level-editor
         {:width (* tiles-wide tile-width)
-         :height (* tiles-high tile-width)}]]
+         :height (* tiles-high tile-width)}
+        [level-tile-component current-tile @state]]]
 
       [:ul.menu.brshs
        {:class (class-for editor :editor :tile)}
@@ -69,7 +85,7 @@
        [:svg#tile-editor
         {:width (* tiles-wide tile-width)
          :height (* tiles-high tile-width)}
-        [tile-component (tiles tile)]
+        [tile-component current-tile]
         [sh/shape shape tile-coords]]]
 
       [:ul.menu

@@ -14,7 +14,7 @@
   (activate s menu (next-item s menu items)))
 
 (defn switch-to-next-tile [s]
-  (switch-to-next s :tile (vec (range (count (s :tiles))))))
+  (switch-to-next s :tile (range (count (s :tiles)))))
 
 (defn grid-align [pos grid]
   (- pos (mod pos grid)))
@@ -22,8 +22,8 @@
 (defn update-level-coords [{:keys [tile-width] :as s} coords]
   (assoc s :level-coords
          (-> coords
-             (update-in [:x] #(grid-align % tile-width))
-             (update-in [:y] #(grid-align % tile-width)))))
+             (update-in [:x] #(grid-align % (/ tile-width 2)))
+             (update-in [:y] #(grid-align % (/ tile-width 2))))))
 
 (defn paint [{:keys [tile shape tile-coords] :as s}]
   (update-in s [:tiles tile :impressions]

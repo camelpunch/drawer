@@ -26,4 +26,5 @@
         y (coords :y)
         w 100
         h 100]
-    [shape-name ((shapes shape-name) x y w h)]))
+    [shape-name
+     ((shapes shape-name) x y w h)]))
