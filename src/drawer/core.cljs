@@ -31,7 +31,7 @@
                        vec)
            :tile-width 100
            :tiles-wide 5
-           :tiles-high 4
+           :tiles-high 5
            :level {:impressions []}}))
 
 (defn listen [el type]

@@ -20,9 +20,9 @@
   (tile-component
    tile
    (merge coords {:viewBox (str "0 0 "
-                                (* tiles-wide 1000)
+                                (* tiles-wide 500)
                                 " "
-                                (* tiles-high 1000))})))
+                                (* tiles-high 500))})))
 
 (defn- stringify [x]
   "Like name, but works with numbers."

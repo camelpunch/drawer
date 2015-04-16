@@ -25,6 +25,7 @@
   (let [x (coords :x)
         y (coords :y)
         w 100
-        h 100]
+        h 100
+        shape-fn (shapes shape-name)]
     [shape-name
-     ((shapes shape-name) x y w h)]))
+     (shape-fn x y w h)]))
