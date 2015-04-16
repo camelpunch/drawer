@@ -30,9 +30,9 @@
            :tiles (->> (range 4)
                        (map new-tile)
                        vec)
-           :tile-width 100
-           :tiles-wide 50
-           :tiles-high 5
+           :tile-width 50
+           :tiles-wide 100
+           :tiles-high 15
            :level {:impressions []}}))
 
 (defn listen

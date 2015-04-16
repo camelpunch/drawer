@@ -98,8 +98,8 @@
        {:class (s/join " " ["workspace"
                             (class-for editor :editor :tile)])}
        [:svg#tile-editor
-        {:width (* 5 tile-width)
-         :height (* 5 tile-width)}
+        {:width (* 10 tile-width)
+         :height (* 10 tile-width)}
         [tile-component current-tile]
         [sh/shape shape tile-coords]]]]
 
