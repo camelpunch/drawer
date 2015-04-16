@@ -21,7 +21,8 @@
               :x2 (+ x1 w)
               :y2 (+ y1 h)}))})
 
-(defn shape [shape-name coords]
+(defn shape
+  [shape-name coords]
   (let [x (coords :x)
         y (coords :y)
         w 100

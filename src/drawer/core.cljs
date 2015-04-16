@@ -15,7 +15,8 @@
 
 (enable-console-print!)
 
-(defn new-tile [id]
+(defn new-tile
+  [id]
   {:id id
    :name (str "Tile " (inc id))
    :impressions []})
@@ -34,20 +35,24 @@
            :tiles-high 5
            :level {:impressions []}}))
 
-(defn listen [el type]
+(defn listen
+  [el type]
   (let [c (chan)]
     (events/listen el type (fn [e] (put! c e)))
     c))
 
-(defn coords-from-event [e]
+(defn coords-from-event
+  [e]
   {:x (.-offsetX e) :y (.-offsetY e)})
 
-(defn event-charcode [e]
+(defn event-charcode
+  [e]
   (js/String.fromCharCode (.-keyCode e)))
 
 (defonce stopper (chan))
 
-(defn page-did-mount []
+(defn page-did-mount
+  []
   (let [tile-editor (dom/getElement "tile-editor")
         level-editor (dom/getElement "level-editor")
         keys (listen js/document events/EventType.KEYUP)
@@ -77,13 +82,16 @@
 
     (swap! state assoc :shape :rect)))
 
-(defn page-component []
+(defn page-component
+  []
   (r/create-class {:render #(pc/page state)
                    :component-did-mount page-did-mount}))
 
-(defn stop []
+(defn stop
+  []
   (put! stopper :please-stop))
 
-(defn mount-root! []
+(defn mount-root!
+  []
   (r/render-component [page-component]
                       (dom/getElement "app")))

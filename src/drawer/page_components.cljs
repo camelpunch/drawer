@@ -4,8 +4,10 @@
             [drawer.shapes :as sh]
             [drawer.keybindings :as kb]))
 
-(defn- add-impression-key [imp]
-  (update-in imp [1] merge {:key (str "imp-" (rand-int 999999))}))
+(defn- add-impression-key
+  [imp]
+  (update-in imp [1]
+             merge {:key (str "imp-" (rand-int 999999))}))
 
 (defn- tile-component
   ([tile]
@@ -24,15 +26,18 @@
                                 " "
                                 (* tiles-high 500))})))
 
-(defn- stringify [x]
+(defn- stringify
+  [x]
   "Like name, but works with numbers."
   (s/replace (str x) #"^:" ""))
 
-(defn- class-for [current k v]
+(defn- class-for
+  [current k v]
   (s/join " " [(s/join "-" (map stringify [v k]))
            (if (= v current) "active" "inactive")]))
 
-(defn page [state]
+(defn page
+  [state]
   (let [switch-to (fn [section-type section]
                     (fn [e]
                       (.preventDefault e)
