@@ -31,7 +31,7 @@
                        (map new-tile)
                        vec)
            :tile-width 100
-           :tiles-wide 5
+           :tiles-wide 50
            :tiles-high 5
            :level {:impressions []}}))
 

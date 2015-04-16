@@ -70,6 +70,16 @@
        [menu-item editor :editor :level "Level Editor"]
        [menu-item editor :editor :tile "Tile Editor"]]
 
+      [:ul.menu.tls
+       (map #(menu-item tile :tile (% :id) (% :name))
+            tiles)]
+
+      [:ul.menu.brshs
+       {:class (class-for editor :editor :tile)}
+       [menu-item shape :shape :rect "Square"]
+       [menu-item shape :shape :circle "Circle"]
+       [menu-item shape :shape :line "Line"]]
+
       [:div#level-editor
        {:class (s/join " " ["workspace"
                             (class-for editor :editor :level)])}
@@ -84,24 +94,14 @@
         [level-tile-component
          current-tile level-coords tiles-wide tiles-high]]]
 
-      [:ul.menu.brshs
-       {:class (class-for editor :editor :tile)}
-       [menu-item shape :shape :rect "Square"]
-       [menu-item shape :shape :circle "Circle"]
-       [menu-item shape :shape :line "Line"]]
-
       [:div
        {:class (s/join " " ["workspace"
                             (class-for editor :editor :tile)])}
        [:svg#tile-editor
-        {:width (* tiles-wide tile-width)
-         :height (* tiles-high tile-width)}
+        {:width (* 5 tile-width)
+         :height (* 5 tile-width)}
         [tile-component current-tile]
-        [sh/shape shape tile-coords]]]
-
-      [:ul.menu
-       (map #(menu-item tile :tile (% :id) (% :name))
-            tiles)]]
+        [sh/shape shape tile-coords]]]]
 
      [:aside.asd
       [:h3 "Keys:"]

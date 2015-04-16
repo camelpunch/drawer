@@ -4,14 +4,9 @@ body {
 }
 .ctnr {
     max-width: 800px;
-    margin: 0 auto;
-}
-.mn {
-    float: left;
 }
 .asd {
-    clear: right;
-    float: right;
+    clear: both;
 }
 .hd {
    float: right;
@@ -36,7 +31,10 @@ body {
     float: left;
 }
 .menu.brshs {
-    float: right;
+    clear: left;
+}
+.menu.tls {
+    clear: left;
 }
 .menu .menu-item:last-child {
     margin-right: 0;
@@ -63,7 +61,6 @@ body {
     color: white;
 }
 .workspace {
-    clear: left;
     cursor: crosshair;
 }
 .workspace svg {
