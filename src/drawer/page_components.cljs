@@ -64,17 +64,17 @@
        [:a {:href "https://github.com/camelpunch/drawer"} "GitHub"]]]
 
      [:main.mn
-      [:p (str "Level coords: " level-coords)]
-      [:p (str "Tile coords: " tile-coords)]
-      [:ul.menu.edtrs
+      [:p.inf.indnt (str "Level coords: " level-coords)]
+      [:p.inf.indnt (str "Tile coords: " tile-coords)]
+      [:ul.menu.edtrs.indnt
        [menu-item editor :editor :level "Level Editor"]
        [menu-item editor :editor :tile "Tile Editor"]]
 
-      [:ul.menu.tls
+      [:ul.menu.tls.indnt
        (map #(menu-item tile :tile (% :id) (% :name))
             tiles)]
 
-      [:ul.menu.brshs
+      [:ul.menu.brshs.indnt
        {:class (class-for editor :editor :tile)}
        [menu-item shape :shape :rect "Square"]
        [menu-item shape :shape :circle "Circle"]
@@ -94,7 +94,7 @@
         [level-tile-component
          current-tile level-coords tiles-wide tiles-high]]]
 
-      [:div
+      [:div.indnt
        {:class (s/join " " ["workspace"
                             (class-for editor :editor :tile)])}
        [:svg#tile-editor
@@ -103,7 +103,7 @@
         [tile-component current-tile]
         [sh/shape shape tile-coords]]]]
 
-     [:aside.asd
+     [:aside.asd.indnt
       [:h3 "Keys:"]
       [:dl.keys
        (mapcat (fn [[k {description :description}]]
