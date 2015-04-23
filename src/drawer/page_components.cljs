@@ -36,22 +36,23 @@
   (s/join " " [(s/join "-" (map stringify [v k]))
            (if (= v current) "active" "inactive")]))
 
+(defn- menu-item
+  [current-item menu item human-name on-click]
+  [:li.menu-item
+   {:key (str menu item human-name)}
+   [:a.btn
+    {:id (stringify item)
+     :href "#"
+     :class (class-for current-item menu item)
+     :on-click on-click}
+    human-name]])
+
 (defn page
   [state]
   (let [switch-to (fn [section-type section]
                     (fn [e]
                       (.preventDefault e)
                       (swap! state c/activate section-type section)))
-
-        menu-item (fn [current-item menu item human-name]
-                    [:li.menu-item
-                     {:key (str menu item human-name)}
-                     [:a.btn
-                      {:id (stringify item)
-                       :href "#"
-                       :class (class-for current-item menu item)
-                       :on-click (switch-to menu item)}
-                      human-name]])
 
         {:keys [tile-coords level-coords editor shape tiles tile level
                 tiles-wide tiles-high tile-width]} @state
@@ -67,11 +68,11 @@
       [:p.inf.indnt (str "Level coords: " level-coords)]
       [:p.inf.indnt (str "Tile coords: " tile-coords)]
       [:ul.menu.edtrs.indnt
-       [menu-item editor :editor :level "Level Editor"]
-       [menu-item editor :editor :tile "Tile Editor"]]
+       [menu-item editor :editor :level "Level Editor" (switch-to :editor :level)]
+       [menu-item editor :editor :tile "Tile Editor" (switch-to :editor :tile)]]
 
       [:ul.menu.tls.indnt
-       (map #(menu-item tile :tile (% :id) (% :name))
+       (map #(menu-item tile :tile (% :id) (% :name) (switch-to :tile (% :id)))
             tiles)]
 
       [:ul.menu.brshs.indnt
