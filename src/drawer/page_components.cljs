@@ -77,9 +77,9 @@
 
       [:ul.menu.brshs.indnt
        {:class (class-for editor :editor :tile)}
-       [menu-item shape :shape :rect "Square"]
-       [menu-item shape :shape :circle "Circle"]
-       [menu-item shape :shape :line "Line"]]
+       [menu-item shape :shape :rect "Square" (switch-to :shape :rect)]
+       [menu-item shape :shape :circle "Circle" (switch-to :shape :circle)]
+       [menu-item shape :shape :line "Line" (switch-to :shape :line)]]
 
       [:div#level-editor
        {:class (s/join " " ["workspace"
