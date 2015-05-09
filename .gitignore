@@ -1,4 +1,5 @@
 /resources/public/js/compiled/**
+/resources/private/js/*.js
 figwheel_server.log
 pom.xml
 *jar
@@ -12,3 +13,4 @@ pom.xml
 .repl
 .nrepl-port
 .#*
+.lein-failures
